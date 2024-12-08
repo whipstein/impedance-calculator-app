@@ -6,9 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Impedance Calculator</title>
     <link href="assets/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="./assets/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/main.js"></script>
   </head>
 
   <body class="bg-body-tertiary">
+    <!-- Light/Dark/Auto Theme setup -->
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
       <symbol id="check2" viewBox="0 0 16 16">
         <path
@@ -28,9 +31,8 @@
           d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z" />
       </symbol>
     </svg>
-
     <div
-      class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
+      class="dropdown position-absolute bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
       <button
         class="btn btn-bd-primary py-2 dropdown-toggle d-flex align-items-center"
         id="bd-theme"
@@ -78,19 +80,45 @@
       </ul>
     </div>
 
+    <!-- App Content -->
     <section class="section">
       <div class="container-fluid text-center">
-        <form name="input">
+        <form name="input-form" id="input-form">
 
-          <div class="row m-1">
-            <div class="col">
+          <div class="row justify-content-center m-3">
+            <div class="col-3">
+              <label class="label">Frequency</label>
+              <div class="select">
+                <select class="form-select" id="freq_unit">
+                  <option value="khz">kHz</option>
+                  <option value="mhz">MHz</option>
+                  <option value="ghz" selected>GHz</option>
+                  <option value="thz">THz</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-3">
+              <label class="label">Cap Unit</label>
+              <div class="select">
+                <select class="form-select" id="cap_unit">
+                  <option value="milli">mF</option>
+                  <option value="micro">μF</option>
+                  <option value="nano">nF</option>
+                  <option value="pico">pF</option>
+                  <option value="femto" selected>fF</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-4">
               <label class="label">Number Format</label>
               <div class="select">
-                <select id="num_format">
+                <select class="form-select" id="num_format">
                   <option value="z">Z</option>
-                  <option value="ri">Gamma Re/Im</option>
-                  <option value="ma" selected>Gamma Mag/Ang</option>
-                  <option value="db">Gamma dB/Ang</option>
+                  <option value="ri">Γ Re/Im</option>
+                  <option value="ma" selected>Γ Mag/Ang</option>
+                  <option value="db">Γ dB/Ang</option>
                 </select>
               </div>
             </div>
@@ -99,27 +127,25 @@
           <div class="row m-3">
             <div class="col">
               <div class="field">
-                <label class="form-label">Frequency (GHz)</label>
-                <input class="form-control text-center is-valid" type="text"
-                  pattern="[0-9]+" name="freq" id="freq"
-                  value="275" onkeyup="calcMatch()">
+                <label class="form-label">Frequency</label>
+                <input class="form-control text-center" type="text"
+                  id="freq" value="275">
               </div>
             </div>
 
             <div class="col">
               <div class="field">
                 <label class="form-label">Z0</label>
-                <input class="form-control text-center is-valid" type="text"
-                  name="zo" id="z0" value="100" onkeyup="calcMatch()">
+                <input class="form-control text-center" type="text"
+                  id="z0" value="100">
               </div>
             </div>
 
             <div class="col">
               <div class="field">
                 <label class="form-label">Significant Digits</label>
-                <input class="form-control text-center is-valid" type="text"
-                  name="sig_digits" id="sig_digits" value="2"
-                  onkeyup="calcMatch()">
+                <input class="form-control text-center" type="text"
+                  id="sig_digits" value="2">
               </div>
             </div>
           </div>
@@ -128,79 +154,75 @@
             <div class="col m-1">
               <div class="field">
                 <label class="form-label" id="s11_re_label">Gamma Mag</label>
-                <input class="form-control text-center is-valid" type="text"
-                  name="s11_re" id="s11_re" onkeyup="calcMatch()">
+                <input class="form-control text-center" type="text" id="s11_re"
+                  value="0">
               </div>
             </div>
             <div class="col m-1">
               <div class="field">
                 <label class="form-label" id="s11_im_label">Gamma Angle
                   (deg)</label>
-                <input class="form-control text-center is-valid" type="text"
-                  name="s11_im" id="s11_im" onkeyup="calcMatch()">
+                <input class="form-control text-center" type="text" id="s11_im"
+                  value="0">
               </div>
             </div>
           </div>
 
-        </form>
+          <div class="bd-example-snippet bd-code-snippet">
+            <div class="bd-example m-0 border-0">
 
-        <div class="bd-example-snippet bd-code-snippet">
-          <div class="bd-example m-0 border-0">
-
-            <div class="col">
-              <div class="row m-2 mt-3">
-                <div class="input-group">
-                  <span class="input-group-text">Gamma</span>
-                  <output class="form-control text-center" id="gamma_ri_val">
-                    <div class="text_box"></div>
-                  </output>
-                </div>
-              </div>
-
-              <div class="row m-2 mt-3">
-                <div class="input-group">
-                  <span class="input-group-text">Gamma</span>
-                  <output class="form-control text-center" id="gamma_ma_val">
-                    <div class="text_box"></div>
-                  </output>
-                </div>
-              </div>
-
-              <div class="row m-2 mt-3">
-                <div class="input-group">
-                  <span class="input-group-text">Z</span>
-                  <output class="form-control text-center" id="z_val">
-                    <div class="text_box"></div>
-                  </output>
-                </div>
-              </div>
-
-              <div class="row m-2 mt-3">
-                <div class="col">
+              <div class="col">
+                <div class="row m-2 mt-3">
                   <div class="input-group">
-                    <span class="input-group-text">R</span>
-                    <output class="form-control text-center" id="r_val">
+                    <span class="input-group-text">Gamma</span>
+                    <output class="form-control text-center" id="gamma_ri_val">
                       <div class="text_box"></div>
                     </output>
                   </div>
                 </div>
-                <div class="col">
+
+                <div class="row m-2 mt-3">
                   <div class="input-group">
-                    <span class="input-group-text">C</span>
-                    <output class="form-control text-center" id="c_val">
+                    <span class="input-group-text">Gamma</span>
+                    <output class="form-control text-center" id="gamma_ma_val">
                       <div class="text_box"></div>
                     </output>
+                  </div>
+                </div>
+
+                <div class="row m-2 mt-3">
+                  <div class="input-group">
+                    <span class="input-group-text">Z</span>
+                    <output class="form-control text-center" id="z_val">
+                      <div class="text_box"></div>
+                    </output>
+                  </div>
+                </div>
+
+                <div class="row m-2 mt-3">
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">R</span>
+                      <output class="form-control text-center" id="r_val">
+                        <div class="text_box"></div>
+                      </output>
+                    </div>
+                  </div>
+                  <div class="col">
+                    <div class="input-group">
+                      <span class="input-group-text">C</span>
+                      <output class="form-control text-center"
+                        id="c_val">
+                        <div class="text_box"></div>
+                      </output>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </section>
+          </div>
 
-          <script
-            src="./assets/dist/js/bootstrap.bundle.min.js"></script>
+        </section>
 
-          <script src="./cheatsheet.js"></script>
-          <script src='./impedances.js'></script>
-          <script src='./validation.js'></script>
-        </body>
-      </html>
+      </body>
+    </html>

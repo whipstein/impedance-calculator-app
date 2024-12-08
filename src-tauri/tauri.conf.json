@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "impedance-calculator-app",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.impedance-calculator-app.app",
   "build": {
     "frontendDist": "../src"
@@ -13,7 +13,7 @@
         "title": "impedance-calculator-app",
         "width": 600,
         "height": 600,
-        "devtools": false
+        "devtools": true
       }
     ],
     "security": {
