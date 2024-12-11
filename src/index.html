@@ -11,6 +11,177 @@
   </head>
 
   <body class="bg-body-tertiary">
+    <!-- App Content -->
+    <section class="section">
+      <div class="container-fluid text-center">
+        <form name="input-form" id="input-form">
+
+          <div class="row justify-content-center m-3">
+            <div class="col-3">
+              <label class="label">Frequency</label>
+              <div class="select">
+                <select class="form-select" id="freqUnit">
+                  <option value="khz">kHz</option>
+                  <option value="mhz">MHz</option>
+                  <option value="ghz" selected>GHz</option>
+                  <option value="thz">THz</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-3">
+              <label class="label">Cap Unit</label>
+              <div class="select">
+                <select class="form-select" id="capUnit">
+                  <option value="milli">mF</option>
+                  <option value="micro">μF</option>
+                  <option value="nano">nF</option>
+                  <option value="pico">pF</option>
+                  <option value="femto" selected>fF</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="col-4">
+              <label class="label">Number Format</label>
+              <div class="select">
+                <select class="form-select" id="numFormat">
+                  <option value="z">Z</option>
+                  <option value="ri">Γ Re/Im</option>
+                  <option value="ma" selected>Γ Mag/Ang</option>
+                  <option value="db">Γ dB/Ang</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row m-3">
+            <div class="col">
+              <div class="field">
+                <label class="form-label">Frequency</label>
+                <input class="form-control text-center" type="text"
+                  id="freq" value="275">
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="field">
+                <label class="form-label">Z0</label>
+                <input class="form-control text-center" type="text"
+                  id="z0" value="100">
+              </div>
+            </div>
+
+            <div class="col">
+              <div class="field">
+                <label class="form-label">Significant Digits</label>
+                <input class="form-control text-center" type="text"
+                  id="sigDigits" value="2">
+              </div>
+            </div>
+          </div>
+
+          <div class="row m-3">
+            <div class="col m-1">
+              <div class="field">
+                <label class="form-label" id="s11ReLabel">Gamma Mag</label>
+                <input class="form-control text-center" type="text" id="s11Re"
+                  value="0">
+              </div>
+            </div>
+            <div class="col m-1">
+              <div class="field">
+                <label class="form-label" id="s11ImLabel">Gamma Angle
+                  (deg)</label>
+                <input class="form-control text-center" type="text" id="s11Im"
+                  value="0">
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <div class="bd-example-snippet bd-code-snippet">
+          <div class="bd-example m-0 border-0">
+
+            <div class="col">
+              <div class="row m-2 mt-3">
+                <div class="col">
+                  <div class="input-group">
+                    <span class="input-group-text">Gamma</span>
+                    <output class="form-control text-center" id="gammaRiVal">
+                      <div class="text_box"></div>
+                    </output>
+                  </div>
+                </div>
+                <div class="col-2">
+                  <button class="input-group-text btn-clipboard" title
+                    data-original-title="Copy to clipboard"
+                    id="gCopy">Copy</button>
+                </div>
+              </div>
+
+              <div class="row m-2 mt-3">
+                <div class="col">
+                  <div class="input-group">
+                    <span class="input-group-text">Gamma</span>
+                    <output class="form-control text-center" id="gammaMaVal">
+                      <div class="text_box"></div>
+                    </output>
+                  </div>
+                </div>
+                <div class="col-2">
+                  <button class="input-group-text btn-clipboard" title
+                    data-original-title="Copy to clipboard"
+                    id="gMaCopy">Copy</button>
+                </div>
+              </div>
+
+              <div class="row m-2 mt-3">
+                <div class="col">
+                  <div class="input-group">
+                    <span class="input-group-text">Z</span>
+                    <output class="form-control text-center" id="zVal">
+                      <div class="text_box">
+                      </div>
+                    </output>
+                  </div>
+                </div>
+                <div class="col-2">
+                  <button class="input-group-text btn-clipboard" title
+                    data-original-title="Copy to clipboard"
+                    id="zCopy">Copy</button>
+                </div>
+              </div>
+
+              <div class="row m-2 mt-3">
+                <div class="col">
+                  <div class="input-group">
+                    <span class="input-group-text">R</span>
+                    <output class="form-control text-center" id="rVal">
+                      <div class="text_box"></div>
+                    </output>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="input-group">
+                    <span class="input-group-text">C</span>
+                    <output class="form-control text-center" id="cVal">
+                      <div class="text_box"></div>
+                    </output>
+                  </div>
+                </div>
+                <div class="col-2">
+                  <button class="input-group-text btn-clipboard" title
+                    data-original-title="Copy to clipboard"
+                    id="rcCopy">Copy</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Light/Dark/Auto Theme setup -->
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none">
       <symbol id="check2" viewBox="0 0 16 16">
@@ -80,149 +251,5 @@
       </ul>
     </div>
 
-    <!-- App Content -->
-    <section class="section">
-      <div class="container-fluid text-center">
-        <form name="input-form" id="input-form">
-
-          <div class="row justify-content-center m-3">
-            <div class="col-3">
-              <label class="label">Frequency</label>
-              <div class="select">
-                <select class="form-select" id="freq_unit">
-                  <option value="khz">kHz</option>
-                  <option value="mhz">MHz</option>
-                  <option value="ghz" selected>GHz</option>
-                  <option value="thz">THz</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="col-3">
-              <label class="label">Cap Unit</label>
-              <div class="select">
-                <select class="form-select" id="cap_unit">
-                  <option value="milli">mF</option>
-                  <option value="micro">μF</option>
-                  <option value="nano">nF</option>
-                  <option value="pico">pF</option>
-                  <option value="femto" selected>fF</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="col-4">
-              <label class="label">Number Format</label>
-              <div class="select">
-                <select class="form-select" id="num_format">
-                  <option value="z">Z</option>
-                  <option value="ri">Γ Re/Im</option>
-                  <option value="ma" selected>Γ Mag/Ang</option>
-                  <option value="db">Γ dB/Ang</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="row m-3">
-            <div class="col">
-              <div class="field">
-                <label class="form-label">Frequency</label>
-                <input class="form-control text-center" type="text"
-                  id="freq" value="275">
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="field">
-                <label class="form-label">Z0</label>
-                <input class="form-control text-center" type="text"
-                  id="z0" value="100">
-              </div>
-            </div>
-
-            <div class="col">
-              <div class="field">
-                <label class="form-label">Significant Digits</label>
-                <input class="form-control text-center" type="text"
-                  id="sig_digits" value="2">
-              </div>
-            </div>
-          </div>
-
-          <div class="row m-3">
-            <div class="col m-1">
-              <div class="field">
-                <label class="form-label" id="s11_re_label">Gamma Mag</label>
-                <input class="form-control text-center" type="text" id="s11_re"
-                  value="0">
-              </div>
-            </div>
-            <div class="col m-1">
-              <div class="field">
-                <label class="form-label" id="s11_im_label">Gamma Angle
-                  (deg)</label>
-                <input class="form-control text-center" type="text" id="s11_im"
-                  value="0">
-              </div>
-            </div>
-          </div>
-
-          <div class="bd-example-snippet bd-code-snippet">
-            <div class="bd-example m-0 border-0">
-
-              <div class="col">
-                <div class="row m-2 mt-3">
-                  <div class="input-group">
-                    <span class="input-group-text">Gamma</span>
-                    <output class="form-control text-center" id="gamma_ri_val">
-                      <div class="text_box"></div>
-                    </output>
-                  </div>
-                </div>
-
-                <div class="row m-2 mt-3">
-                  <div class="input-group">
-                    <span class="input-group-text">Gamma</span>
-                    <output class="form-control text-center" id="gamma_ma_val">
-                      <div class="text_box"></div>
-                    </output>
-                  </div>
-                </div>
-
-                <div class="row m-2 mt-3">
-                  <div class="input-group">
-                    <span class="input-group-text">Z</span>
-                    <output class="form-control text-center" id="z_val">
-                      <div class="text_box"></div>
-                    </output>
-                  </div>
-                </div>
-
-                <div class="row m-2 mt-3">
-                  <div class="col">
-                    <div class="input-group">
-                      <span class="input-group-text">R</span>
-                      <output class="form-control text-center" id="r_val">
-                        <div class="text_box"></div>
-                      </output>
-                    </div>
-                  </div>
-                  <div class="col">
-                    <div class="input-group">
-                      <span class="input-group-text">C</span>
-                      <output class="form-control text-center"
-                        id="c_val">
-                        <div class="text_box"></div>
-                      </output>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </section>
-
-      </body>
-    </html>
+  </body>
+</html>

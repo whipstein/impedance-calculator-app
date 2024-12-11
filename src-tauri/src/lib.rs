@@ -1,29 +1,15 @@
+use crate::rf_utils::{calc_gamma, calc_rc, calc_z};
 use num_complex::Complex;
+use serde::ser::{SerializeStruct, Serializer};
+use serde::Serialize;
+use std::f64::consts::PI;
+use tauri::ipc::Response;
+use tauri::{AppHandle, Manager};
+use tauri_plugin_clipboard_manager::ClipboardExt;
 
-fn get_mult(scale: &str) -> f64 {
-    match scale {
-        "tera" | "T" | "THz" | "thz" => 1e-12,
-        "giga" | "G" | "GHz" | "ghz" | "GΩ" => 1e-9,
-        "mega" | "M" | "MHz" | "mhz" | "MΩ" => 1e-6,
-        "kilo" | "k" | "kHz" | "khz" | "kΩ" => 1e-3,
-        "milli" | "m" | "mΩ" | "mF" | "mH" => 1e3,
-        "micro" | "u" | "μΩ" | "μF" | "μH" => 1e6,
-        "nano" | "n" | "nΩ" | "nF" | "nH" => 1e9,
-        "pico" | "p" | "pΩ" | "pF" | "pH" => 1e12,
-        "femto" | "f" | "fΩ" | "fF" | "fH" => 1e15,
-        _ => 1.0,
-    }
-}
+mod rf_utils;
 
-fn scale(val: f64, scale: &str) -> f64 {
-    val * get_mult(scale)
-}
-
-fn unscale(val: f64, scale: &str) -> f64 {
-    val / get_mult(scale)
-}
-
-#[derive(serde::Serialize, Default)]
+#[derive(Serialize, Default)]
 struct ResultsReturn {
     zre: f64,
     zim: f64,
@@ -35,105 +21,95 @@ struct ResultsReturn {
     c: f64,
 }
 
-fn calc_gamma(z: Complex<f64>, z0: f64) -> Complex<f64> {
-    let z0: f64 = z0;
-
-    (z - z0) / (z + z0)
+#[derive(Default)]
+struct ResponseReturn {
+    z: Complex<f64>,
+    g: Complex<f64>,
+    g_mag: f64,
+    g_ang: f64,
+    r: f64,
+    c: f64,
 }
 
-fn calc_z(gamma: Complex<f64>, z0: f64) -> Complex<f64> {
-    z0 * (1.0 + gamma) / (1.0 - gamma)
+impl Serialize for ResponseReturn {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut s = serializer.serialize_struct("ResponseReturn", 8)?;
+        s.serialize_field("z_re", &self.z.re)?;
+        s.serialize_field("z_im", &self.z.im)?;
+        s.serialize_field("g_re", &self.g.re)?;
+        s.serialize_field("g_im", &self.g.im)?;
+        s.serialize_field("g_mag", &self.g_mag)?;
+        s.serialize_field("g_ang", &self.g_ang)?;
+        s.serialize_field("r", &self.r)?;
+        s.serialize_field("c", &self.c)?;
+        s.end()
+    }
 }
 
-fn calc_rc(z: Complex<f64>, freq: f64, fscale: &str, rscale: &str, cscale: &str) -> (f64, f64) {
-    let y = 1.0 / z;
-
-    (
-        1.0 / scale(y.re, rscale),
-        scale(
-            y.im / (2.0 * std::f64::consts::PI * unscale(freq, fscale)),
-            cscale,
-        ),
-    )
-}
-
-#[tauri::command]
+#[tauri::command(rename_all = "snake_case")]
 fn calc_vals(
     re: f64,
     im: f64,
     imp: &str,
     z0: f64,
     freq: f64,
-    fscale: &str,
-    rscale: &str,
-    cscale: &str,
-) -> Result<ResultsReturn, String> {
-    let mut out = ResultsReturn::default();
-
-    match imp {
-        "z" => {
-            let z = Complex::new(re, im);
-            out.zre = z.re;
-            out.zim = z.im;
-            let gamma = calc_gamma(z, z0);
-            out.gre = gamma.re;
-            out.gim = gamma.im;
-            out.gmag = gamma.norm();
-            out.gang = gamma.arg() * 180.0 / std::f64::consts::PI;
-            (out.r, out.c) = calc_rc(z, freq, fscale, rscale, cscale);
-        }
-        "ri" => {
-            let gamma = Complex::new(re, im);
-            out.gre = gamma.re;
-            out.gim = gamma.im;
-            out.gmag = gamma.norm();
-            out.gang = gamma.arg() * 180.0 / std::f64::consts::PI;
-            let z = calc_z(gamma, z0);
-            out.zre = z.re;
-            out.zim = z.im;
-            (out.r, out.c) = calc_rc(z, freq, fscale, rscale, cscale);
-        }
-        "ma" => {
-            let gamma = Complex::from_polar(re, im * std::f64::consts::PI / 180.0);
-            out.gre = gamma.re;
-            out.gim = gamma.im;
-            out.gmag = gamma.norm();
-            out.gang = gamma.arg() * 180.0 / std::f64::consts::PI;
-            let z = calc_z(gamma, z0);
-            out.zre = z.re;
-            out.zim = z.im;
-            (out.r, out.c) = calc_rc(z, freq, fscale, rscale, cscale);
-        }
-        "db" => {
-            let gamma =
-                Complex::from_polar(10_f64.powf(re / 20.0), im * std::f64::consts::PI / 180.0);
-            out.gre = gamma.re;
-            out.gim = gamma.im;
-            out.gmag = gamma.norm();
-            out.gang = gamma.arg() * 180.0 / std::f64::consts::PI;
-            let z = calc_z(gamma, z0);
-            out.zre = z.re;
-            out.zim = z.im;
-            (out.r, out.c) = calc_rc(z, freq, fscale, rscale, cscale);
-        }
-        _ => return Err("invalid impedance format".to_string()),
+    f_scale: &str,
+    r_scale: &str,
+    c_scale: &str,
+) -> Response {
+    let (z, g) = match imp {
+        "z" => (Complex::new(re, im), calc_gamma(Complex::new(re, im), z0)),
+        "ri" => (calc_z(Complex::new(re, im), z0), Complex::new(re, im)),
+        "ma" => (
+            calc_z(Complex::from_polar(re, im * PI / 180.0), z0),
+            Complex::from_polar(re, im * PI / 180.0),
+        ),
+        "db" => (
+            calc_z(
+                Complex::from_polar(10_f64.powf(re / 20.0), im * PI / 180.0),
+                z0,
+            ),
+            Complex::from_polar(10_f64.powf(re / 20.0), im * PI / 180.0),
+        ),
+        _ => (Complex::ONE, Complex::ONE),
     };
 
-    Ok(out)
+    let (r, c) = calc_rc(z, freq, f_scale, r_scale, c_scale);
+
+    let out = ResponseReturn {
+        z: z,
+        g: g,
+        g_mag: g.norm(),
+        g_ang: g.arg() * 180.0 / PI,
+        r: r,
+        c: c,
+    };
+
+    Response::new(serde_json::to_string(&out).unwrap())
 }
 
-use tauri::Manager;
+#[tauri::command(rename_all = "snake_case")]
+fn copy_point(app: AppHandle, x: f64, y: f64, unit: &str) {
+    let val = format!("{}, {}{}", x, y, unit.to_string());
+    app.clipboard().write_text(val.to_string()).unwrap();
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_window_state::Builder::new().build())
+        .plugin(tauri_plugin_persisted_scope::init())
         .setup(|app| {
             #[cfg(debug_assertions)]
             app.get_webview_window("main").unwrap().open_devtools();
             Ok(())
         })
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![calc_vals])
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .invoke_handler(tauri::generate_handler![calc_vals, copy_point])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

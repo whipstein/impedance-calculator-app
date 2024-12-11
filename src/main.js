@@ -1,16 +1,23 @@
 const { invoke } = window.__TAURI__.core;
 
-let sig_digits = 2;
+let sigDigits = 2;
+let numFormat, freqUnit, capUnit, z0, freq, re, im;
+let numFormatEl, capUnitEl, freqUnitEl, freqEl, z0El, sigDigitsEl, s11ReLabelEl, s11ReEl, s11ImLabelEl, s11ImEl, gCopyEl, gMaCopyEl, zCopyEl, rcCopyEl, points;
+let zValEl, gammaRiValEl, gammaMaValEl, rValEl, cValEl;
+let zRe, zIm, gammaRe, gammaIm, gammaMag, gammaAng, r, c;
 
 function digits(val, sd) {
-    return val.toFixed(sd);
+    return parseFloat(val.toFixed(sd));
 }
 
-function print_unit(unit) {
+function printUnit(unit, parse = false) {
     switch (unit) {
         case "milli":
             return "m";
         case "micro":
+            if (parse) {
+                return "u";
+            }
             return "μ";
         case "nano":
             return "n";
@@ -23,101 +30,165 @@ function print_unit(unit) {
     }
 }
   
-function print_val(val, unit, suffix, sd) {
+function printVal(val, unit, suffix, sd) {
     if (Number.isFinite(val)) {
-        return "" + digits(val, sd) + " " + print_unit(unit) + suffix;
+        return "" + digits(val, sd) + printUnit(unit) + suffix;
     }
     return "" + val;
 }
-  
+
 function calcMatch() {
-    const num_format = document.getElementById("num_format").value;
-    const freq_unit = document.getElementById("freq_unit").value;
-    const cap_unit = document.getElementById("cap_unit").value;
-    const z0 = parseFloat(document.getElementById("z0").value);
-    const freq = parseFloat(document.getElementById("freq").value);
-    const re = parseFloat(document.getElementById("s11_re").value);
-    const im = parseFloat(document.getElementById("s11_im").value);
+    getVals();
 
-    invoke("calc_vals", {re: re, im: im, imp: num_format, z0: z0, freq: freq, fscale: freq_unit, rscale: "", cscale: cap_unit})
+    invoke("calc_vals", {re: re, im: im, imp: numFormat, z0: z0, freq: freq, f_scale: freqUnit, r_scale: "", c_scale: capUnit})
         .then((result) => {
-            var txt = "<div class=\"text_box\">" + print_val(result.zre, "", "", sig_digits);
-            if (result.zim < 0) txt += " - ";
+            var txt = "<div class=\"text_box\">" + printVal(result.z_re, "", "", sigDigits);
+            if (result.z_im < 0) txt += " - ";
             else txt += " + ";
-            txt += print_val(Math.abs(result.zim), "", "j Ω</div>", sig_digits);
-            document.getElementById("z_val").innerHTML = txt;
+            txt += printVal(Math.abs(result.z_im), "", "j Ω</div>", sigDigits);
+            zValEl.innerHTML = txt;
+            zRe = parseFloat(result.z_re);
+            zIm = parseFloat(result.z_im);
 
-            var txt = "<div class=\"text_box\">" + print_val(result.gre, "", "", sig_digits);
-            if (result.gim < 0) txt += " - ";
+            var txt = "<div class=\"text_box\">" + printVal(result.g_re, "", "", sigDigits);
+            if (result.g_im < 0) txt += " - ";
             else txt += " + ";
-            txt += print_val(Math.abs(result.gim), "", "j</div>", sig_digits);
-            document.getElementById("gamma_ri_val").innerHTML = txt;
+            txt += printVal(Math.abs(result.g_im), "", "j</div>", sigDigits);
+            gammaRiValEl.innerHTML = txt;
+            gammaRe = parseFloat(result.g_re);
+            gammaIm = parseFloat(result.g_im);
         
-            var txt = "<div class=\"text_box\">" + print_val(result.gmag, "", " &angmsd; ", sig_digits);
-            txt += print_val(result.gang, "", "&deg; </div>", sig_digits);
-            document.getElementById("gamma_ma_val").innerHTML = txt;
+            var txt = "<div class=\"text_box\">" + printVal(result.g_mag, "", " &angmsd; ", sigDigits);
+            txt += printVal(result.g_ang, "", "&deg; </div>", sigDigits);
+            gammaMaValEl.innerHTML = txt;
+            gammaMag = parseFloat(result.g_mag);
+            gammaAng = parseFloat(result.g_ang);
         
-            var txt = "<div class=\"text_box\">" + print_val(result.r, "", " Ω</div>", sig_digits);
-            document.getElementById("r_val").innerHTML = txt;
-            var txt = "<div class=\"text_box\">" + print_val(result.c, cap_unit, "F</div>", sig_digits);
-            document.getElementById("c_val").innerHTML = txt;
+            var txt = "<div class=\"text_box\">" + printVal(result.r, "", " Ω</div>", sigDigits);
+            rValEl.innerHTML = txt;
+            r = parseFloat(result.r);
+            var txt = "<div class=\"text_box\">" + printVal(result.c, capUnit, "F</div>", sigDigits);
+            cValEl.innerHTML = txt;
+            c = parseFloat(result.c);
         })
         .catch((err) => {
             console.log("ERROR: " + err);
             var txt = "<div class=\"text_box\">ERROR";
-            document.getElementById("z_val").innerHTML = txt;
-            document.getElementById("gamma_ri_val").innerHTML = txt;
-            document.getElementById("gamma_ma_val").innerHTML = txt;
-            document.getElementById("r_val").innerHTML = txt;
-            document.getElementById("c_val").innerHTML = txt;
+            zValEl.innerHTML = txt;
+            gammaRiValEl.innerHTML = txt;
+            gammaMaValEl.innerHTML = txt;
+            rValEl.innerHTML = txt;
+            cValEl.innerHTML = txt;
+            zRe = Number.NaN;
+            zIm = Number.NaN;
+            gammaRe = Number.NaN;
+            gammaIm = Number.NaN;
+            gammaMag = Number.NaN;
+            gammaAng = Number.NaN;
+            r = Number.NaN;
+            c = Number.NaN;
         });
 }
 
-function change_imp() {
-    const num_format = document.getElementById("num_format").value;
+function changeImp() {
+    getVals();
 
-    if (num_format == "z") {
-        document.getElementById("s11_re_label").textContent = "Z Real";
-        document.getElementById("s11_im_label").textContent = "Z Imaginary";
-    } else if (num_format == "ri") {
-        document.getElementById("s11_re_label").textContent = "Gamma Real";
-        document.getElementById("s11_im_label").textContent = "Gamma Imaginary";
-    } else if (num_format == "ma") {
-        document.getElementById("s11_re_label").textContent = "Gamma Magnitude";
-        document.getElementById("s11_im_label").textContent = "Gamma Angle (deg)";
-    } else if (num_format == "db") {
-        document.getElementById("s11_re_label").textContent = "Gamma Magnitude (dB)";
-        document.getElementById("s11_im_label").textContent = "Gamma Angle (deg)";
-    } else if (num_format == "rc") {
-        document.getElementById("s11_re_label").textContent = "Resistance";
-        document.getElementById("s11_im_label").textContent = "Capacitance (fF)";
+    let reTxt, imTxt;
+
+    switch (numFormat) {
+        case "z":
+            reTxt = "Z Real";
+            imTxt = "Z Imaginary";
+            break;
+        case "ri":
+            reTxt = "Gamma Real";
+            imTxt = "Gamma Imaginary";
+            break;
+        case "ma":
+            reTxt = "Gamma Magnitude";
+            imTxt = "Gamma Angle (deg)";
+            break;
+        case "db":
+            reTxt = "Gamma Magnitude (dB)";
+            imTxt = "Gamma Angle (deg)";
+            break;
+        case "rc":
+            reTxt = "Resistance";
+            imTxt = "Capacitance";
+            break;
+        default:
+            reTxt = "ERROR";
+            imTxt = "ERROR";
     }
+
+    s11ReLabelEl.textContent = reTxt;
+    s11ImLabelEl.textContent = imTxt;
 
     calcMatch();
 }
 
-let numFormatEl;
-let capUnitEl;
-let freqUnitEl;
-let freqEl;
-let z0El;
-let sigDigitsEl;
-let s11ReEl;
-let s11ImEl;
+function getVals() {
+    numFormat = numFormatEl.value;
+    freqUnit = freqUnitEl.value;
+    capUnit = capUnitEl.value;
+    z0 = parseFloat(z0El.value);
+    freq = parseFloat(freqEl.value);
+    re = parseFloat(s11ReEl.value);
+    im = parseFloat(s11ImEl.value);
+}
+
+function clip(el) {
+    let x, y;
+    let unit = "";
+
+    switch (el) {
+        case "z":
+            x = zRe;
+            y = zIm;
+            break;
+        case "g":
+            x = gammaRe;
+            y = gammaIm;
+            break;
+        case "gma":
+            x = gammaMag;
+            y = gammaAng;
+            break;
+        case "rc":
+            x = r;
+            y = c;
+            unit = printUnit(capUnit, true);
+    };
+
+    invoke("copy_point", {x: digits(x, sigDigits), y: digits(y, sigDigits), unit: unit});
+}
 
 window.addEventListener("DOMContentLoaded", () => {
-    numFormatEl = document.getElementById("num_format");
-    capUnitEl = document.getElementById("cap_unit");
-    freqUnitEl = document.getElementById("freq_unit");
+    numFormatEl = document.getElementById("numFormat");
+    capUnitEl = document.getElementById("capUnit");
+    freqUnitEl = document.getElementById("freqUnit");
     freqEl = document.getElementById("freq");
     z0El = document.getElementById("z0");
-    sigDigitsEl = document.getElementById("sig_digits");
-    s11ReEl = document.getElementById("s11_re");
-    s11ImEl = document.getElementById("s11_im");
+    sigDigitsEl = document.getElementById("sigDigits");
+    s11ReLabelEl = document.getElementById("s11ReLabel");
+    s11ImLabelEl = document.getElementById("s11ImLabel");
+    s11ReEl = document.getElementById("s11Re");
+    s11ImEl = document.getElementById("s11Im");
+    zValEl = document.getElementById("zVal");
+    gammaRiValEl = document.getElementById("gammaRiVal");
+    gammaMaValEl = document.getElementById("gammaMaVal");
+    rValEl = document.getElementById("rVal");
+    cValEl = document.getElementById("cVal");
+    gCopyEl = document.getElementById("gCopy");
+    gMaCopyEl = document.getElementById("gMaCopy");
+    zCopyEl = document.getElementById("zCopy");
+    rcCopyEl = document.getElementById("rcCopy");
+
+    getVals();
 
     numFormatEl.addEventListener("change", (e) => {
         e.preventDefault();
-        change_imp();
+        changeImp();
     });
 
     capUnitEl.addEventListener("change", (e) => {
@@ -142,7 +213,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     sigDigitsEl.addEventListener("change", (e) => {
         e.preventDefault();
-        sig_digits = parseInt(sigDigitsEl.value, 10);
+        sigDigits = parseInt(sigDigitsEl.value, 10);
         calcMatch();
     });
 
@@ -154,5 +225,45 @@ window.addEventListener("DOMContentLoaded", () => {
     s11ImEl.addEventListener("change", (e) => {
         e.preventDefault();
         calcMatch();
+    });
+
+    gCopyEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        clip("g");
+        gCopyEl.innerText = "Copied";
+
+        setTimeout(()=> {
+            gCopyEl.innerText = "Copy";
+        },700)
+    });
+
+    gMaCopyEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        clip("gma");
+        gMaCopyEl.innerText = "Copied";
+
+        setTimeout(()=> {
+            gMaCopyEl.innerText = "Copy";
+        },700)
+    });
+
+    zCopyEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        clip("z");
+        zCopyEl.innerText = "Copied";
+
+        setTimeout(()=> {
+            zCopyEl.innerText = "Copy";
+        },700)
+    });
+
+    rcCopyEl.addEventListener("click", (e) => {
+        e.preventDefault();
+        clip("rc");
+        rcCopyEl.innerText = "Copied";
+
+        setTimeout(()=> {
+            rcCopyEl.innerText = "Copy";
+        },700)
     });
 });
