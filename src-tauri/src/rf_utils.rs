@@ -24,13 +24,43 @@ pub fn unscale(val: f64, scale: &str) -> f64 {
 }
 
 pub fn calc_gamma(z: Complex<f64>, z0: f64) -> Complex<f64> {
-    let z0: f64 = z0;
+    (z - z0) / (z + z0)
+}
+
+pub fn calc_gamma_from_rc(
+    r: f64,
+    c: f64,
+    z0: f64,
+    freq: f64,
+    fscale: &str,
+    rscale: &str,
+    cscale: &str,
+) -> Complex<f64> {
+    let z = 1.0
+        / Complex::new(
+            1.0 / r,
+            2.0 * std::f64::consts::PI * unscale(freq, fscale) * unscale(c, cscale),
+        );
 
     (z - z0) / (z + z0)
 }
 
 pub fn calc_z(gamma: Complex<f64>, z0: f64) -> Complex<f64> {
     z0 * (1.0 + gamma) / (1.0 - gamma)
+}
+
+pub fn calc_z_from_rc(
+    r: f64,
+    c: f64,
+    freq: f64,
+    fscale: &str,
+    rscale: &str,
+    cscale: &str,
+) -> Complex<f64> {
+    1.0 / Complex::new(
+        1.0 / r,
+        2.0 * std::f64::consts::PI * unscale(freq, fscale) * unscale(c, cscale),
+    )
 }
 
 pub fn calc_rc(z: Complex<f64>, freq: f64, fscale: &str, rscale: &str, cscale: &str) -> (f64, f64) {

@@ -11,8 +11,8 @@
     "windows": [
       {
         "title": "impedance-calculator-app",
-        "width": 600,
-        "height": 600,
+        "width": 540,
+        "height": 540,
         "devtools": true
       }
     ],

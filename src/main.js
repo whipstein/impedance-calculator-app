@@ -98,19 +98,19 @@ function changeImp() {
     switch (numFormat) {
         case "z":
             reTxt = "Z Real";
-            imTxt = "Z Imaginary";
+            imTxt = "Z Imag";
             break;
         case "ri":
-            reTxt = "Gamma Real";
-            imTxt = "Gamma Imaginary";
+            reTxt = "Γ Real";
+            imTxt = "Γ Imag";
             break;
         case "ma":
-            reTxt = "Gamma Magnitude";
-            imTxt = "Gamma Angle (deg)";
+            reTxt = "Γ Mag";
+            imTxt = "Γ Angle (&deg;)";
             break;
         case "db":
-            reTxt = "Gamma Magnitude (dB)";
-            imTxt = "Gamma Angle (deg)";
+            reTxt = "Γ Mag (dB)";
+            imTxt = "Γ Angle (&deg;)";
             break;
         case "rc":
             reTxt = "Resistance";
@@ -121,8 +121,8 @@ function changeImp() {
             imTxt = "ERROR";
     }
 
-    s11ReLabelEl.textContent = reTxt;
-    s11ImLabelEl.textContent = imTxt;
+    s11ReLabelEl.innerHTML = "<div>" + reTxt + "</div>";
+    s11ImLabelEl.innerHTML = "<div>" + imTxt + "</div>";
 
     calcMatch();
 }

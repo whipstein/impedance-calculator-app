@@ -1,4 +1,4 @@
-use crate::rf_utils::{calc_gamma, calc_rc, calc_z};
+use crate::rf_utils::{calc_gamma, calc_gamma_from_rc, calc_rc, calc_z, calc_z_from_rc};
 use num_complex::Complex;
 use serde::ser::{SerializeStruct, Serializer};
 use serde::Serialize;
@@ -74,6 +74,10 @@ fn calc_vals(
             ),
             Complex::from_polar(10_f64.powf(re / 20.0), im * PI / 180.0),
         ),
+        "rc" => (
+            calc_z_from_rc(re, im, freq, f_scale, r_scale, c_scale),
+            calc_gamma_from_rc(re, im, z0, freq, f_scale, r_scale, c_scale),
+        ),
         _ => (Complex::ONE, Complex::ONE),
     };
 
@@ -100,8 +104,6 @@ fn copy_point(app: AppHandle, x: f64, y: f64, unit: &str) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_window_state::Builder::new().build())
-        .plugin(tauri_plugin_persisted_scope::init())
         .setup(|app| {
             #[cfg(debug_assertions)]
             app.get_webview_window("main").unwrap().open_devtools();
